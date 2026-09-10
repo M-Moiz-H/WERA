@@ -1,6 +1,9 @@
 import http from "node:http";
 import { URL } from "node:url";
-import { WarEraClient } from "@wera/warera-client";
+import {
+  WarEraApiError,
+  WarEraClient,
+} from "@wera/warera-client";
 
 const port = Number(process.env.PORT ?? 3000);
 const host = process.env.HOST ?? "0.0.0.0";
@@ -16,12 +19,27 @@ function json(
   body: unknown,
 ): void {
   response.statusCode = status;
-  response.setHeader("content-type", "application/json; charset=utf-8");
+  response.setHeader(
+    "content-type",
+    "application/json; charset=utf-8",
+  );
   response.end(JSON.stringify(body));
 }
 
 const server = http.createServer(async (request, response) => {
-  const url = new URL(request.url ?? "/", `http://${request.headers.host ?? "localhost"}`);
+  const url = new URL(
+    request.url ?? "/",
+    `http://${request.headers.host ?? "localhost"}`,
+  );
+
+  if (request.method === "GET" && url.pathname === "/") {
+    json(response, 200, {
+      name: "WERA",
+      service: "api",
+      status: "running",
+    });
+    return;
+  }
 
   if (request.method === "GET" && url.pathname === "/health") {
     json(response, 200, {
@@ -34,11 +52,24 @@ const server = http.createServer(async (request, response) => {
     return;
   }
 
-  if (request.method === "GET" && url.pathname === "/") {
+  if (
+    request.method === "GET" &&
+    url.pathname === "/warera/status"
+  ) {
+    if (!warera.isConfigured()) {
+      json(response, 503, {
+        ok: false,
+        connected: false,
+        error: "WARERA_API_KEY is not configured.",
+      });
+      return;
+    }
+
     json(response, 200, {
-      name: "WERA",
-      service: "api",
-      status: "running",
+      ok: true,
+      connected: true,
+      message:
+        "WarEra credentials are configured. Endpoint verification comes next.",
     });
     return;
   }
@@ -50,5 +81,13 @@ const server = http.createServer(async (request, response) => {
 });
 
 server.listen(port, host, () => {
-  console.log(`WERA API listening on http://${host}:${port}`);
+  console.log(
+    `WERA API listening on http://${host}:${port}`,
+  );
+});
+
+process.on("SIGTERM", () => {
+  server.close(() => {
+    process.exit(0);
+  });
 });
