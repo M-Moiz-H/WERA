@@ -140,17 +140,20 @@ export class WarEraClient {
         }
       }
 
-      const rateLimit: WarEraRateLimit = {
-        remaining: this.parseHeader(
-          response.headers.get("ratelimit-remaining"),
-        ),
-        total: this.parseHeader(
-          response.headers.get("ratelimit-limit"),
-        ),
-        reset: this.parseHeader(
-          response.headers.get("ratelimit-reset"),
-        ),
-      };
+      const rateLimit: WarEraRateLimit = {};
+      const remaining = this.parseHeader(
+        response.headers.get("ratelimit-remaining"),
+      );
+      const total = this.parseHeader(
+        response.headers.get("ratelimit-limit"),
+      );
+      const reset = this.parseHeader(
+        response.headers.get("ratelimit-reset"),
+      );
+
+      if (remaining !== undefined) rateLimit.remaining = remaining;
+      if (total !== undefined) rateLimit.total = total;
+      if (reset !== undefined) rateLimit.reset = reset;
 
       if (!response.ok) {
         throw new WarEraApiError(
