@@ -40,7 +40,9 @@ export class WarEraClient {
   private readonly maxRetries: number;
 
   public constructor(options: WarEraClientOptions = {}) {
-    this.apiKey = options.apiKey;
+    if (options.apiKey !== undefined) {
+      this.apiKey = options.apiKey;
+    }
     this.baseUrl = (
       options.baseUrl ?? "https://api2.warera.io/trpc"
     ).replace(/\/+$/, "");
@@ -140,17 +142,28 @@ export class WarEraClient {
         }
       }
 
-      const rateLimit: WarEraRateLimit = {
-        remaining: this.parseHeader(
-          response.headers.get("ratelimit-remaining"),
-        ),
-        total: this.parseHeader(
-          response.headers.get("ratelimit-limit"),
-        ),
-        reset: this.parseHeader(
-          response.headers.get("ratelimit-reset"),
-        ),
-      };
+      const rateLimit: WarEraRateLimit = {};
+
+      const remaining = this.parseHeader(
+        response.headers.get("ratelimit-remaining"),
+      );
+      if (remaining !== undefined) {
+        rateLimit.remaining = remaining;
+      }
+
+      const total = this.parseHeader(
+        response.headers.get("ratelimit-limit"),
+      );
+      if (total !== undefined) {
+        rateLimit.total = total;
+      }
+
+      const reset = this.parseHeader(
+        response.headers.get("ratelimit-reset"),
+      );
+      if (reset !== undefined) {
+        rateLimit.reset = reset;
+      }
 
       if (!response.ok) {
         throw new WarEraApiError(
