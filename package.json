@@ -1,0 +1,21 @@
+{
+  "name": "wera",
+  "private": true,
+  "version": "0.1.0",
+  "description": "WERA - WarEra Economic Research & Analytics",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm --workspace @wera/api run dev",
+    "build": "npm run build:api",
+    "build:api": "npm --workspace @wera/api run build",
+    "start": "npm --workspace @wera/api run start",
+    "typecheck": "npm run typecheck:api",
+    "typecheck:api": "npm --workspace @wera/api run typecheck"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
