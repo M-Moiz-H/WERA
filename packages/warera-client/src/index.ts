@@ -140,16 +140,20 @@ export class WarEraClient {
         }
       }
 
+      const remaining = this.parseHeader(
+        response.headers.get("ratelimit-remaining"),
+      );
+      const total = this.parseHeader(
+        response.headers.get("ratelimit-limit"),
+      );
+      const reset = this.parseHeader(
+        response.headers.get("ratelimit-reset"),
+      );
+
       const rateLimit: WarEraRateLimit = {
-        remaining: this.parseHeader(
-          response.headers.get("ratelimit-remaining"),
-        ),
-        total: this.parseHeader(
-          response.headers.get("ratelimit-limit"),
-        ),
-        reset: this.parseHeader(
-          response.headers.get("ratelimit-reset"),
-        ),
+        ...(remaining !== undefined ? { remaining } : {}),
+        ...(total !== undefined ? { total } : {}),
+        ...(reset !== undefined ? { reset } : {}),
       };
 
       if (!response.ok) {
